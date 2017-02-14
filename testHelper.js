@@ -96,6 +96,7 @@
 
     function restoreAnswersHandler(event) {
         const db = event.target.result
+        // TODO should we move result = [] declaration to here instead (not global)?
         db
             .transaction(STORE_NAME)
             .objectStore(STORE_NAME)
@@ -155,5 +156,6 @@
         request.onsuccess = isReviewPage ? restoreAnswersHandler : saveAnswersHandler
     }
 
+    // TODO make the code read like a story (main first, then subsequent method declarations)
     main()
 })()
