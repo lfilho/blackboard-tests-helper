@@ -24,6 +24,7 @@
         request.onupgradeneeded = event => {
             const QUESTION_KEY = 'questionHash'
             const db = event.currentTarget.result
+
             try {
                 db.deleteObjectStore(STORE_NAME)
             } catch (e) {
@@ -102,8 +103,8 @@
             .onsuccess = event => {
                 const cursor = event.target.result
                 if (cursor) {
-                    result.push(cursor.value);
-                    cursor.continue();
+                    result.push(cursor.value)
+                    cursor.continue()
                 } else {
                     console.info('Retrieved all exercises from DB.')
                     restoreAnswers(result)
@@ -118,6 +119,7 @@
         transaction.onerror = event => {
             console.error('Error on transaction:', event.target.error)
         }
+
         store = transaction.objectStore(STORE_NAME)
         const storeReq = store.clear()
         storeReq.onsuccess = saveAnswers
@@ -126,7 +128,7 @@
 
     function setupIndexedDb() {
         window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB
-        window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction || {READ_WRITE: 'readwrite'}
+        window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction || { READ_WRITE: 'readwrite' }
         window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange
     }
 
@@ -138,7 +140,7 @@
     function hashCode(str) {
         return str
             .split('')
-            .reduce((prevHash, currVal) => ((prevHash << 5) - prevHash) + currVal.charCodeAt(0), 0);
+            .reduce((prevHash, currVal) => ((prevHash << 5) - prevHash) + currVal.charCodeAt(0), 0)
     }
 
     function main() {
