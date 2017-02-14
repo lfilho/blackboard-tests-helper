@@ -25,7 +25,7 @@
             store = transaction.objectStore(STORE_NAME)
             const storeReq = store.clear()
             storeReq.onsuccess = callback
-            storeReq.onerror = event => { console.log('Error clearing the store:', event.target.error) }
+            storeReq.onerror = event => { console.error('Error clearing the store:', event.target.error) }
         }
 
         request.onupgradeneeded = event => {
@@ -34,7 +34,7 @@
             try {
                 db.deleteObjectStore(STORE_NAME)
             } catch (e) {
-                console.log('Creating new store')
+                console.info('Creating new store')
             } finally {
                 const bootstrappedStore = db.createObjectStore(STORE_NAME, { keyPath: QUESTION_KEY })
 
