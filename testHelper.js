@@ -14,6 +14,26 @@
     let store
     let percentualScore
 
+    main()
+
+    function main() {
+        setupIndexedDb()
+
+        const request = getIdbRequest()
+
+        const reviewTestUrlRegex = new RegExp('/assessment/review/')
+        const isInReviewPage = reviewTestUrlRegex.test(window.location.href)
+
+        // If we're not on test review page, assume we're on the test take page:
+        request.onsuccess = isInReviewPage ? saveAnswersHandler : restoreAnswersHandler
+    }
+
+    function setupIndexedDb() {
+        window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB
+        window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction || { READ_WRITE: 'readwrite' }
+        window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange
+    }
+
     function getIdbRequest() {
         const request = window.indexedDB.open(DB_NAME, DB_VERSION)
 
@@ -39,29 +59,18 @@
         return request
     }
 
-    function restoreAnswers(result) {
-        document.querySelectorAll('.takeQuestionDiv').forEach($currentQuestion => {
-            const $currentAnswersInputs = $currentQuestion.querySelectorAll('input[type=radio]')
-            const currentQuestionTitleText = $currentQuestion.querySelector('fieldset legend').innerText.trim()
-            const currentAnswers = Array.from($currentAnswersInputs)
-                .map($input => $input.closest('tr').innerText.trim())
+    function saveAnswersHandler(event) {
+        const db = event.target.result
 
-            const questionHash = calculateQuestionHash(currentQuestionTitleText, currentAnswers)
+        const transaction = db.transaction([STORE_NAME], 'readwrite')
+        transaction.onerror = event => {
+            console.error('Error on transaction:', event.target.error)
+        }
 
-            const answeredQuestion = result.find(item => item.questionHash === questionHash)
-
-            if (answeredQuestion && answeredQuestion.answerStatus === CORRECT_ANSWER_STRING) {
-                const $correctAnswerRadio = Array.from($currentAnswersInputs).find(candidate => {
-                    const $candidateRow = candidate.closest('tr')
-                    const candidateAnswer = $candidateRow.querySelector('label').innerText.trim()
-
-                    return  candidateAnswer === answeredQuestion.answer
-                })
-                $correctAnswerRadio.checked = true
-            }
-        })
-
-        console.info('All correct answers are now checked.')
+        store = transaction.objectStore(STORE_NAME)
+        const storeReq = store.clear()
+        storeReq.onsuccess = saveAnswers
+        storeReq.onerror = event => { console.error('Error clearing the store:', event.target.error) }
     }
 
     function saveAnswers() {
@@ -97,8 +106,7 @@
     function restoreAnswersHandler(event) {
         const db = event.target.result
         // TODO should we move result = [] declaration to here instead (not global)?
-        db
-            .transaction(STORE_NAME)
+        db.transaction(STORE_NAME)
             .objectStore(STORE_NAME)
             .openCursor()
             .onsuccess = event => {
@@ -113,24 +121,29 @@
             }
     }
 
-    function saveAnswersHandler(event) {
-        const db = event.target.result
+    function restoreAnswers(result) {
+        document.querySelectorAll('.takeQuestionDiv').forEach($currentQuestion => {
+            const $currentAnswersInputs = $currentQuestion.querySelectorAll('input[type=radio]')
+            const currentQuestionTitleText = $currentQuestion.querySelector('fieldset legend').innerText.trim()
+            const currentAnswers = Array.from($currentAnswersInputs)
+                .map($input => $input.closest('tr').innerText.trim())
 
-        const transaction = db.transaction([STORE_NAME], 'readwrite')
-        transaction.onerror = event => {
-            console.error('Error on transaction:', event.target.error)
-        }
+            const questionHash = calculateQuestionHash(currentQuestionTitleText, currentAnswers)
 
-        store = transaction.objectStore(STORE_NAME)
-        const storeReq = store.clear()
-        storeReq.onsuccess = saveAnswers
-        storeReq.onerror = event => { console.error('Error clearing the store:', event.target.error) }
-    }
+            const answeredQuestion = result.find(item => item.questionHash === questionHash)
 
-    function setupIndexedDb() {
-        window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB
-        window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction || { READ_WRITE: 'readwrite' }
-        window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange
+            if (answeredQuestion && answeredQuestion.answerStatus === CORRECT_ANSWER_STRING) {
+                const $correctAnswerRadio = Array.from($currentAnswersInputs).find(candidate => {
+                    const $candidateRow = candidate.closest('tr')
+                    const candidateAnswer = $candidateRow.querySelector('label').innerText.trim()
+
+                    return  candidateAnswer === answeredQuestion.answer
+                })
+                $correctAnswerRadio.checked = true
+            }
+        })
+
+        console.info('All correct answers are now checked.')
     }
 
     function calculateQuestionHash(question, allAnswers) {
@@ -139,23 +152,7 @@
     }
 
     function hashCode(str) {
-        return str
-            .split('')
+        return str.split('')
             .reduce((prevHash, currVal) => ((prevHash << 5) - prevHash) + currVal.charCodeAt(0), 0)
     }
-
-    function main() {
-        setupIndexedDb()
-
-        const request = getIdbRequest()
-
-        const reviewTestUrlRegex = new RegExp('/assessment/review/')
-        const isReviewPage = reviewTestUrlRegex.test(window.location.href)
-
-        // If we're not on test review page, assume we're on the test take page:
-        request.onsuccess = isReviewPage ? saveAnswersHandler : restoreAnswersHandler
-    }
-
-    // TODO make the code read like a story (main first, then subsequent method declarations)
-    main()
 })()
