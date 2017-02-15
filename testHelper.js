@@ -153,7 +153,7 @@
         const isReviewPage = reviewTestUrlRegex.test(window.location.href)
 
         // If we're not on test review page, assume we're on the test take page:
-        request.onsuccess = isReviewPage ? restoreAnswersHandler : saveAnswersHandler
+        request.onsuccess = isReviewPage ? saveAnswersHandler : restoreAnswersHandler
     }
 
     // TODO make the code read like a story (main first, then subsequent method declarations)
