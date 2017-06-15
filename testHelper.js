@@ -92,7 +92,7 @@
                 result.push(tuple)
             } else if (el.innerText.trim() === TRYOUT_RESULT_LABEL) {
                 const score = el.closest('tr').querySelector('td').innerText.trim()
-                const [numerator, denominator] = score.replace(/,/g, '.').match(/\d.\d+/g)
+                const [numerator, denominator] = score.replace(/,/g, '.').match(/(\d.)?\d+/g)
 
                 percentualScore = (numerator / denominator * 100).toFixed(2)
             }
