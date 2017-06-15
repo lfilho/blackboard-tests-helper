@@ -152,7 +152,9 @@
     }
 
     function hashCode(str) {
-        return str.split('')
+        return str
+            .replace(/\n/g, '')
+            .split('')
             .reduce((prevHash, currVal) => ((prevHash << 5) - prevHash) + currVal.charCodeAt(0), 0)
     }
 })()
